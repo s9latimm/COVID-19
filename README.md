@@ -1,4 +1,4 @@
-# COVID-19-REGION-PLOT
+# COVID-19-GeoPlot
 
 A tool to visualize up-to-date case data published by the [ECDC](https://www.ecdc.europa.eu).
 
