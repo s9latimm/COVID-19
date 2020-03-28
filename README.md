@@ -1,6 +1,6 @@
 # COVID-19-GeoPlot
 
-A tool to visualize up-to-date case data published by the [ECDC](https://www.ecdc.europa.eu).
+A tool to visualize daily case data published by the [ECDC](https://www.ecdc.europa.eu).
 
 Please note that daily numbers only include yesterday (today's cases will appear tomorrow) and request may not work until current data is uploaded.
 
