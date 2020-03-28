@@ -43,6 +43,7 @@ URL = 'https://www.ecdc.europa.eu/sites/default/files/documents/' \
 
 class GeoPlot:
     """Visualize up-to-date case data published by the ECDC."""
+
     def __init__(self):
         self.date = None
         self.parser = argparse.ArgumentParser()
@@ -85,13 +86,12 @@ class GeoPlot:
             type=str,
             default='*',
             help=f'comma separated list of GeoIDs (e.g. "DE,US")')
-        self.parser.add_argument(
-            '-S',
-            '--suffix',
-            metavar='<str>',
-            type=str,
-            default='',
-            help=f'use suffix in filename instead of date')
+        self.parser.add_argument('-S',
+                                 '--suffix',
+                                 metavar='<str>',
+                                 type=str,
+                                 default='',
+                                 help=f'use suffix in filename instead of date')
         self.parser.add_argument('-s',
                                  '--show',
                                  default=False,
@@ -125,8 +125,8 @@ class GeoPlot:
             if skip:
                 skip = False
                 continue
-            countries[row[7].value.strip()] = row[6].value.replace(
-                '_', ' ').strip()
+            countries[row[7].value.strip()] = row[6].value.replace('_',
+                                                                   ' ').strip()
         countries['*'] = 'World'
         return countries
 
@@ -152,8 +152,7 @@ class GeoPlot:
         if not raw:
             self.parser.error('no data')
         data = [(0, 0, self.date)]
-        for i in range(min({i
-                            for i in raw if raw[i] > 0}),
+        for i in range(min({i for i in raw if raw[i] > 0}),
                        max(raw.keys()) + 1):
             if i in raw.keys():
                 data.append(
@@ -188,8 +187,7 @@ class GeoPlot:
             ax2.set_ylim(bottom=0)
         ax2.tick_params(axis='y', labelcolor=color)
         color = 'tab:red'
-        ax1.bar([i[2] for i in data[1:]], [i[0] for i in data[1:]],
-                color=color)
+        ax1.bar([i[2] for i in data[1:]], [i[0] for i in data[1:]], color=color)
         ax1.set_ylabel(f'new {self.args.column} per day', color=color)
         ax1.set_ylim(bottom=0)
         ax1.tick_params(axis='y', labelcolor=color)
@@ -229,8 +227,7 @@ class GeoPlot:
         if self.args.column not in COLUMNS.keys():
             self.parser.error(f'column must be one of {list(COLUMNS)}')
         self.countries = sorted(
-            {i.strip()
-             for i in self.args.country.strip().split(',')})
+            {i.strip() for i in self.args.country.strip().split(',')})
         regions = self.get_regions(table)
         for country in self.countries:
             if country not in regions.keys():
