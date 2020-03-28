@@ -1,3 +1,17 @@
 #!/bin/bash
 
-yapf -i *.py
+PYTHON_FILES=$(git diff --name-only --cached --diff-filter=AM | grep --color=never '.py$')
+
+if [ $? -eq 0 ]; then
+    yapf --in-place --style google --parallel --verbose $PYTHON_FILES
+else
+    exit 0
+fi
+
+if [ $? -eq 0 ]; then
+    git add $PYTHON_FILES 
+else
+    exit 1
+fi
+
+exit $?
