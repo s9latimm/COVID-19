@@ -7,24 +7,33 @@ Please note that daily numbers only include yesterday (today's cases will appear
 ### Usage
 
 ``` 
+usage: covid.py [-h] [-c <str>] [-C <list<str>>] [-S <str>] [-s]
+                [-d <datetime>] [-L] [-l]
+
+optional arguments:
   -h, --help            show this help message and exit
   -c <str>, --column <str>
                         one of ['cases', 'deaths']
   -C <list<str>>, --country <list<str>>
                         comma separated list of GeoIDs (e.g. "DE,US")
+  -S <str>, --suffix <str>
+                        use suffix in filename instead of date
   -s, --show            show plot instead of saving
   -d <datetime>, --date <datetime>
                         date (yyyy-mm-dd)
   -L, --list            list available GeoIDs and exit
   -l, --log             logarithmic scale
+
 ```
 
 ### Examples
 
-Logarithmic plot of cases from all regions:
+Logarithmic plot of worldwide cases:
 
-![plots/covid-19-world-cases-log-2020-03-25.svg](plots/covid-19-world-cases-log-2020-03-25.svg?sanitize=true)
+![WORLD LOG](plots/covid-19-world-cases-log-example.svg?sanitize=true)
 
-Linear plot of cases from Germany:
+Linear and logarithmic plots of cases in Germany:
 
-![plots/covid-19-de-cases-2020-03-25.svg](plots/covid-19-de-cases-2020-03-25.svg?sanitize=true)
+![DE LIN](plots/covid-19-de-cases-example.svg?sanitize=true)
+![DE LOG](plots/covid-19-de-cases-log-example.svg?sanitize=true)
+

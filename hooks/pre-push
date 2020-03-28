@@ -1,0 +1,4 @@
+#!/bin/bash
+
+yapf *.py --diff
+pylint *.py

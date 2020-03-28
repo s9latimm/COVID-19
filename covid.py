@@ -85,6 +85,13 @@ class GeoPlot:
             type=str,
             default='*',
             help=f'comma separated list of GeoIDs (e.g. "DE,US")')
+        self.parser.add_argument(
+            '-S',
+            '--suffix',
+            metavar='<str>',
+            type=str,
+            default='',
+            help=f'use suffix in filename instead of date')
         self.parser.add_argument('-s',
                                  '--show',
                                  default=False,
@@ -113,18 +120,25 @@ class GeoPlot:
     def get_regions(table):
         """Collect all available GeoIDs."""
         countries = dict()
+        skip = True
         for row in table.get_rows():
+            if skip:
+                skip = False
+                continue
             countries[row[7].value.strip()] = row[6].value.replace(
                 '_', ' ').strip()
         countries['*'] = 'World'
-        del countries['GeoId']
         return countries
 
     def get_data(self, table):
         """Extract data from table."""
         raw = dict()
         idx = COLUMNS[self.args.column]
+        skip = True
         for row in table.get_rows():
+            if skip:
+                skip = False
+                continue
             try:
                 if 'WORLD' in self.countries or row[7].value.strip(
                 ) in self.countries:
@@ -181,8 +195,8 @@ class GeoPlot:
         ax1.tick_params(axis='y', labelcolor=color)
         ax1.tick_params(axis='x', labelrotation=90)
         ax1.set_title(
-            f'COVID-19 {" ".join(self.countries)} ({data[1][2]} → {data[-1][2]})'
-        )
+            f'COVID-19 {" ".join(self.countries)}{" LOG" if self.args.log else ""} '
+            f'({data[1][2]} → {data[-1][2]})')
         fig.set_size_inches(20, 10, forward=True)
         fig.tight_layout()
         if self.args.show:
@@ -190,9 +204,12 @@ class GeoPlot:
             signal.signal(signal.SIGTERM, self.handler)
             plt.show()
         else:
+            suffix = self.date.strftime(
+                "%Y-%m-%d") if not self.args.suffix else self.args.suffix
             file = f'plots/covid-19-{"-".join(self.countries)}-{self.args.column}' \
                    f'{"-log" if self.args.log else ""}' \
-                   f'-{self.date.strftime("%Y-%m-%d")}.svg'.lower()
+                   f'-{suffix}' \
+                   f'.svg'.lower()
             print(f'[SAVE] {os.path.abspath(file)}')
             plt.savefig(file)
         print('[CLOSE]')

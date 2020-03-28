@@ -1,0 +1,7 @@
+#!/bin/bash
+
+sed -i -e '1 s/\b\(.\)/\u\1/' $1
+
+echo -e "" >> $1
+
+git diff --name-status --staged --diff-filter=ADM >> $1
