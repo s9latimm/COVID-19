@@ -1,6 +1,6 @@
 #!/bin/bash
 
-git stash
+git stash  || true
 
 ./covid.py --log --suffix example
 git add --force plots/covid-19-world-cases-log-example.svg
@@ -13,6 +13,14 @@ git add --force plots/covid-19-de-cases-log-example.svg
 
 git commit -m "Update examples"
 
-git push
+if [ $? -eq 0 ]; then
+    git push
+else
+    exit 1
+fi
 
-git stash pop
+if [ $? -eq 0 ]; then
+    git stash pop || true
+else
+    exit 1
+fi
