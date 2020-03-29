@@ -11,6 +11,7 @@ git add --force plots/covid-19-de-cases-example.svg
 git add --force plots/covid-19-de-cases-log-diff-example.svg
 
 git commit -m "Delete examples"
+git push
 
 ./covid.py --log --suffix example
 ./covid.py --country DE --suffix example
@@ -21,15 +22,7 @@ git add --force plots/covid-19-de-cases-example.svg
 git add --force plots/covid-19-de-cases-log-diff-example.svg
 
 git commit -m "Update examples"
+git push
 
-if [ $? -eq 0 ]; then
-    git push
-else
-    exit 1
-fi
-
-if [ $? -eq 0 ]; then
-    git stash pop || true
-else
-    exit 1
-fi
+git reset --hard
+git stash pop || true
