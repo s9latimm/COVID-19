@@ -2,18 +2,7 @@
 
 git stash  || true
 
-rm -f plots/covid-19-world-cases-log-example.svg
-rm -f plots/covid-19-de-cases-example.svg
-rm -f plots/covid-19-de-cases-log-diff-example.svg
-
 mkdir --parents --verbose plots
-
-git add --force plots/covid-19-world-cases-log-example.svg
-git add --force plots/covid-19-de-cases-example.svg
-git add --force plots/covid-19-de-cases-log-diff-example.svg
-
-git commit -m "Delete examples"
-git push
 
 ./covid.py --log --suffix example
 ./covid.py --country DE --suffix example
@@ -24,7 +13,7 @@ git add --force plots/covid-19-de-cases-example.svg
 git add --force plots/covid-19-de-cases-log-diff-example.svg
 
 git commit -m "Update examples"
-git push
+git push || true
 
 git reset --hard
 git stash pop || true
