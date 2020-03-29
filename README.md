@@ -1,6 +1,6 @@
 # COVID-19-GeoPlot
 
-A tool to visualize up-to-date case data published by the [ECDC](https://www.ecdc.europa.eu).
+A tool to visualize daily case data published by the [ECDC](https://www.ecdc.europa.eu).
 
 Please note that daily numbers only include yesterday (today's cases will appear tomorrow) and request may not work until current data is uploaded.
 
@@ -28,12 +28,6 @@ optional arguments:
 
 ### Examples
 
-Logarithmic plot of worldwide cases:
-
 ![WORLD LOG](plots/covid-19-world-cases-log-example.svg?sanitize=true)
-
-Linear and logarithmic plots of cases in Germany:
-
 ![DE LIN](plots/covid-19-de-cases-example.svg?sanitize=true)
 ![DE LOG](plots/covid-19-de-cases-log-example.svg?sanitize=true)
-
