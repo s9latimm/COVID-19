@@ -6,6 +6,8 @@ rm -f plots/covid-19-world-cases-log-example.svg
 rm -f plots/covid-19-de-cases-example.svg
 rm -f plots/covid-19-de-cases-log-diff-example.svg
 
+mkdir --parents --verbose plots
+
 git add --force plots/covid-19-world-cases-log-example.svg
 git add --force plots/covid-19-de-cases-example.svg
 git add --force plots/covid-19-de-cases-log-diff-example.svg
