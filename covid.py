@@ -27,6 +27,7 @@
 
 import os
 import sys
+import math
 import signal
 import argparse
 import datetime
@@ -97,8 +98,13 @@ class GeoPlot:
                                  default=False,
                                  action='store_true',
                                  help='show plot instead of saving')
+        self.parser.add_argument('-d',
+                                 '--diff',
+                                 default=False,
+                                 action='store_true',
+                                 help='plot differentiation')
         self.parser.add_argument(
-            '-d',
+            '-D',
             '--date',
             metavar='<datetime>',
             type=str,
@@ -130,6 +136,11 @@ class GeoPlot:
         countries['*'] = 'World'
         return countries
 
+    @staticmethod
+    def log(number):
+        """Calculate logarithm base 10."""
+        return math.log10(number) if number > 0 else 0
+
     def get_data(self, table):
         """Extract data from table."""
         raw = dict()
@@ -151,61 +162,70 @@ class GeoPlot:
                 continue
         if not raw:
             self.parser.error('no data')
-        data = [(0, 0, self.date)]
+        data = [(0, 0, 0, self.date)]
         for i in range(min({i for i in raw if raw[i] > 0}),
                        max(raw.keys()) + 1):
             if i in raw.keys():
+                val = data[-1][1] + raw[i]
+                diff = self.log(val) - self.log(
+                    data[-1][1]) if self.args.log else val - data[-1][1]
                 data.append(
-                    (raw[i], data[-1][1] + raw[i],
+                    (raw[i], val, diff,
                      datetime.datetime(*xlrd.xldate_as_tuple(i, 0)).strftime(
                          '%Y-%m-%d')))
             else:
                 data.append(
-                    (0, data[-1][1],
+                    (0, data[-1][1], 0,
                      datetime.datetime(*xlrd.xldate_as_tuple(i, 0)).strftime(
                          '%Y-%m-%d')))
-
-        return data
+        if self.args.log:
+            data[1] = (data[1][0], data[1][1], 0, data[1][3])
+        return data[1:]
 
     @staticmethod
     def handler(*_):
         """Handle SIGINT and SIGKILL."""
-        plt.close()
+        print('[ABORT]')
+        sys.exit(0)
 
     def plot(self, data):
         """Show or save plot of data."""
         fig, ax1 = plt.subplots()
-        color = 'tab:blue'
-        ax2 = ax1.twinx()
-        ax2.plot([i[2] for i in data[1:]], [i[1] for i in data[1:]],
-                 'o-',
-                 color=color)
-        ax2.set_ylabel(self.args.column, color=color)
-        if self.args.log:
-            ax2.set_yscale('log')
+        ax1.margins(x=.01, y=.01)
+        ax1.spines['top'].set_visible(False)
+        if self.args.diff:
+            ax1.plot([i[3] for i in data], [i[2] for i in data],
+                     '-',
+                     color='tab:red')
+            ax1.set_ylabel(f'differentiation', color='tab:red')
         else:
-            ax2.set_ylim(bottom=0)
-        ax2.tick_params(axis='y', labelcolor=color)
-        color = 'tab:red'
-        ax1.bar([i[2] for i in data[1:]], [i[0] for i in data[1:]], color=color)
-        ax1.set_ylabel(f'new {self.args.column} per day', color=color)
-        ax1.set_ylim(bottom=0)
-        ax1.tick_params(axis='y', labelcolor=color)
+            ax1.bar([i[3] for i in data], [i[0] for i in data], color='tab:red')
+            ax1.set_ylabel(f'new {self.args.column} per day', color='tab:red')
+        ax1.tick_params(axis='y', labelcolor='tab:red')
         ax1.tick_params(axis='x', labelrotation=90)
         ax1.set_title(
-            f'COVID-19 {" ".join(self.countries)}{" LOG" if self.args.log else ""} '
-            f'({data[1][2]} → {data[-1][2]})')
+            f'COVID-19 {" ".join(self.countries)}{" LOG" if self.args.log else ""}'
+            f'{" DIFF" if self.args.diff else ""} ({data[1][3]} → {data[-1][3]})'
+        )
+        ax2 = ax1.twinx()
+        ax2.margins(x=.01, y=.01)
+        ax2.plot([i[3] for i in data], [i[1] for i in data],
+                 'o-',
+                 color='tab:blue')
+        ax2.set_ylabel(self.args.column, color='tab:blue')
+        if self.args.log:
+            ax2.set_yscale('log')
+        ax2.tick_params(axis='y', labelcolor='tab:blue')
         fig.set_size_inches(20, 10, forward=True)
         fig.tight_layout()
         if self.args.show:
-            signal.signal(signal.SIGINT, self.handler)
-            signal.signal(signal.SIGTERM, self.handler)
             plt.show()
         else:
             suffix = self.date.strftime(
                 "%Y-%m-%d") if not self.args.suffix else self.args.suffix
             file = f'plots/covid-19-{"-".join(self.countries)}-{self.args.column}' \
                    f'{"-log" if self.args.log else ""}' \
+                   f'{"-diff" if self.args.diff else ""}' \
                    f'-{suffix}' \
                    f'.svg'.lower()
             print(f'[SAVE] {os.path.abspath(file)}')
@@ -215,6 +235,8 @@ class GeoPlot:
 
     def main(self):
         """Entry point."""
+        signal.signal(signal.SIGINT, self.handler)
+        signal.signal(signal.SIGTERM, self.handler)
         self.parse_args()
         try:
             self.date = datetime.datetime.strptime(self.args.date, '%Y-%m-%d')

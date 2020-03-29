@@ -6,9 +6,9 @@ Please note that daily numbers only include yesterday (today's cases will appear
 
 ### Usage
 
-``` 
-usage: covid.py [-h] [-c <str>] [-C <list<str>>] [-S <str>] [-s]
-                [-d <datetime>] [-L] [-l]
+```
+usage: covid.py [-h] [-c <str>] [-C <list<str>>] [-S <str>] [-s] [-d]
+                [-D <datetime>] [-L] [-l]
 
 optional arguments:
   -h, --help            show this help message and exit
@@ -19,15 +19,15 @@ optional arguments:
   -S <str>, --suffix <str>
                         use suffix in filename instead of date
   -s, --show            show plot instead of saving
-  -d <datetime>, --date <datetime>
+  -d, --diff            plot differentiation
+  -D <datetime>, --date <datetime>
                         date (yyyy-mm-dd)
   -L, --list            list available GeoIDs and exit
   -l, --log             logarithmic scale
-
 ```
 
 ### Examples
 
 ![WORLD LOG](plots/covid-19-world-cases-log-example.svg?sanitize=true)
 ![DE LIN](plots/covid-19-de-cases-example.svg?sanitize=true)
-![DE LOG](plots/covid-19-de-cases-log-example.svg?sanitize=true)
+![DE LOG DIFF](plots/covid-19-de-cases-log-diff-example.svg?sanitize=true)
