@@ -28,12 +28,6 @@ optional arguments:
 
 ### Examples
 
-Logarithmic plot of worldwide cases:
-
 ![WORLD LOG](plots/covid-19-world-cases-log-example.svg?sanitize=true)
-
-Linear and logarithmic plots of cases in Germany:
-
 ![DE LIN](plots/covid-19-de-cases-example.svg?sanitize=true)
 ![DE LOG](plots/covid-19-de-cases-log-example.svg?sanitize=true)
-
