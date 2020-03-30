@@ -205,7 +205,7 @@ class GeoPlot:
         ax1.tick_params(axis='x', labelrotation=90)
         ax1.set_title(
             f'COVID-19 {" ".join(self.countries)}{" LOG" if self.args.log else ""}'
-            f'{" DIFF" if self.args.diff else ""} ({data[1][3]} → {data[-1][3]})'
+            f'{" DIFF" if self.args.diff else ""} ({data[0][3]} → {data[-1][3]})'
         )
         ax2 = ax1.twinx()
         ax2.margins(x=.01, y=.01)
