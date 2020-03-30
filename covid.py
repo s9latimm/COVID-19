@@ -51,27 +51,6 @@ class GeoPlot:
         self.args = None
         self.countries = None
 
-    def poll(self):
-        """Get raw sheet from ECDC server."""
-        rep = 0
-        while True:
-            url = f'{URL}-{self.date.strftime("%Y-%m-%d")}.xlsx'
-            try:
-                req = requests.get(url)
-            except requests.exceptions.ConnectionError as err:
-                self.parser.error(err)
-            print(f'[GET] {url} {req.status_code}')
-            if req.status_code == 200:
-                break
-            if rep > 3:
-                self.parser.error('could not get dataset')
-            elif rep == 3:
-                self.date = datetime.date.today()
-            else:
-                self.date -= timedelta(days=1)
-            rep += 1
-        return req.content
-
     def parse_args(self):
         """Parse options."""
         self.parser.add_argument('-c',
@@ -122,6 +101,27 @@ class GeoPlot:
                                  help='logarithmic scale')
         self.args = self.parser.parse_args()
 
+    def poll(self):
+        """Get raw sheet from ECDC server."""
+        rep = 0
+        while True:
+            url = f'{URL}-{self.date.strftime("%Y-%m-%d")}.xlsx'
+            try:
+                req = requests.get(url)
+            except requests.exceptions.ConnectionError as err:
+                self.parser.error(err)
+            print(f'[GET] {url} {req.status_code}')
+            if req.status_code == 200:
+                break
+            if rep > 6:
+                self.parser.error('could not get dataset')
+            elif rep == 3:
+                self.date = datetime.date.today()
+            else:
+                self.date -= timedelta(days=1)
+            rep += 1
+        return req.content
+
     @staticmethod
     def get_regions(table):
         """Collect all available GeoIDs."""
@@ -139,7 +139,7 @@ class GeoPlot:
     @staticmethod
     def log(number):
         """Calculate logarithm base 10."""
-        return math.log10(number) if number > 0 else 0
+        return math.log10(max(number, 1))
 
     def get_data(self, table):
         """Extract data from table."""
@@ -163,23 +163,23 @@ class GeoPlot:
         if not raw:
             self.parser.error('no data')
         data = [(0, 0, 0, self.date)]
-        for i in range(min({i for i in raw if raw[i] > 0}),
-                       max(raw.keys()) + 1):
+        for i in range(
+                min({i for i in raw if i > 0 and raw[i] > 0}) - 1,
+                max(raw.keys()) + 1):
             if i in raw.keys():
                 val = data[-1][1] + raw[i]
                 diff = self.log(val) - self.log(
                     data[-1][1]) if self.args.log else val - data[-1][1]
                 data.append(
-                    (raw[i], val, diff,
+                    (raw[i], val if not self.args.log else max(val, 1), diff,
                      datetime.datetime(*xlrd.xldate_as_tuple(i, 0)).strftime(
                          '%Y-%m-%d')))
             else:
+                val = data[-1][1]
                 data.append(
-                    (0, data[-1][1], 0,
+                    (0, val if not self.args.log else max(val, 1), 0,
                      datetime.datetime(*xlrd.xldate_as_tuple(i, 0)).strftime(
                          '%Y-%m-%d')))
-        if self.args.log:
-            data[1] = (data[1][0], data[1][1], 0, data[1][3])
         return data[1:]
 
     @staticmethod
