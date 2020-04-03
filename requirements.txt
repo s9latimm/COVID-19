@@ -1,4 +1,7 @@
+wheel>=0.32.3
 matplotlib>=3.2.1
 numpy>=1.18.2
 requests>=2.23.0
 xlrd>=1.2.0
+yapf>=0.29.0
+pylint>=2.4.4
