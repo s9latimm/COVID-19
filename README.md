@@ -28,6 +28,6 @@ optional arguments:
 
 ### Examples
 
-![WORLD LOG](https://gitlab.com/s9latimm/covid-19-geoplot/-/jobs/artifacts/master/raw/plots/covid-19-world-cases-log-example.svg?job=update&sanitize=true)
-![DE LIN](https://gitlab.com/s9latimm/covid-19-geoplot/-/jobs/artifacts/master/raw/plots/covid-19-de-cases-example.svg?job=update&sanitize=true)
-![DE LOG DIFF](https://gitlab.com/s9latimm/covid-19-geoplot/-/jobs/artifacts/master/raw/plots/covid-19-de-cases-log-diff-example.svg?job=update&sanitize=true)
+![WORLD LOG](https://gitlab.com/s9latimm/covid-19-geoplot/-/jobs/artifacts/master/raw/plots/covid-19-world-cases-log-example.svg?job=deploy&sanitize=true)
+![DE LIN](https://gitlab.com/s9latimm/covid-19-geoplot/-/jobs/artifacts/master/raw/plots/covid-19-de-cases-example.svg?job=deploy&sanitize=true)
+![DE LOG DIFF](https://gitlab.com/s9latimm/covid-19-geoplot/-/jobs/artifacts/master/raw/plots/covid-19-de-cases-log-diff-example.svg?job=deploy&sanitize=true)
