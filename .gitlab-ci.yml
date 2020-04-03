@@ -1,13 +1,35 @@
-update:
+stages:
+  - check
+  - deploy
+
+.template: &template
+  cache:
+    key: ${CI_PROJECT_ID}
+    paths:
+      - venv/
   before_script:
     - apt-get update -qy
     - apt-get install -y python3-venv
     - python3 -m venv venv
+  timeout: 10m
+
+check:
+  <<: *template
+  stage: check
+  script:
+    - venv/bin/pip3 install yapf pylint
+    - venv/bin/yapf --style google --parallel --verbose --diff covid.py
+    - venv/bin/pylint covid.py
+
+deploy:
+  <<: *template
+  stage: deploy
+  needs:
+    - check
+  script:
     - venv/bin/pip3 install wheel
     - venv/bin/pip3 install -r requirements.txt
-    - venv/bin/pip3 freeze
-    - mkdir --parents plots
-  script:
+    - mkdir -p plots
     - venv/bin/python3 covid.py --log --suffix example
     - venv/bin/python3 covid.py --country DE --suffix example
     - venv/bin/python3 covid.py --country DE --log --diff --suffix example
@@ -17,8 +39,3 @@ update:
       - plots/covid-19-de-cases-example.svg
       - plots/covid-19-de-cases-log-diff-example.svg
     expire_in: 1w
-  cache:
-    key: ${CI_PROJECT_ID}
-    paths:
-      - venv/
-  timeout: 10m

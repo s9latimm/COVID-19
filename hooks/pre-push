@@ -1,0 +1,11 @@
+#!/bin/bash
+
+PYTHON_FILES=$(find . -name '*.py')
+
+if [ $? -eq 0 ]; then
+    yapf --diff --style google --parallel --verbose $PYTHON_FILES && pylint --jobs=0 $PYTHON_FILES
+else
+    exit 0
+fi
+
+exit $?
