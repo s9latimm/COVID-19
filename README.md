@@ -26,7 +26,7 @@ optional arguments:
   -l, --log             logarithmic scale
 ```
 
-### Examples
+### Examples (updated daily)
 
 ![WORLD LOG](https://gitlab.com/s9latimm/covid-19-geoplot/-/jobs/artifacts/master/raw/plots/covid-19-world-cases-log-example.svg?job=deploy&sanitize=true)
 ![DE LIN](https://gitlab.com/s9latimm/covid-19-geoplot/-/jobs/artifacts/master/raw/plots/covid-19-de-cases-example.svg?job=deploy&sanitize=true)
