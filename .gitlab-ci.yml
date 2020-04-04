@@ -36,4 +36,4 @@ deploy:
       - plots/covid-19-world-cases-log-example.svg
       - plots/covid-19-de-cases-example.svg
       - plots/covid-19-de-cases-log-diff-example.svg
-    expire_in: 1d
+    expire_in: 1w
