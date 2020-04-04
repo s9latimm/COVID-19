@@ -3,6 +3,8 @@ stages:
   - deploy
 
 .template: &template
+  tags:
+    - gitlab-org
   cache:
     key: ${CI_PROJECT_ID}
     paths:
@@ -37,4 +39,4 @@ deploy:
       - plots/covid-19-world-cases-log-example.svg
       - plots/covid-19-de-cases-example.svg
       - plots/covid-19-de-cases-log-diff-example.svg
-    expire_in: 1w
+    expire_in: 1d
