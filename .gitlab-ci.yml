@@ -28,7 +28,6 @@ deploy:
   needs:
     - check
   script:
-    - mkdir -p plots
     - venv/bin/python3 covid.py --log --suffix example
     - venv/bin/python3 covid.py --country DE --suffix example
     - venv/bin/python3 covid.py --country DE --log --diff --suffix example

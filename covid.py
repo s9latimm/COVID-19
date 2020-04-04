@@ -221,6 +221,7 @@ class GeoPlot:
         if self.args.show:
             plt.show()
         else:
+            os.makedirs('plots', exist_ok=True)
             suffix = self.date.strftime(
                 "%Y-%m-%d") if not self.args.suffix else self.args.suffix
             file = f'plots/covid-19-{"-".join(self.countries)}-{self.args.column}' \
