@@ -139,7 +139,7 @@ class GeoPlot:
     @staticmethod
     def log(number):
         """Calculate logarithm base 10."""
-        return math.log10(max(number, 1))
+        return math.log2(max(number, 1))
 
     def get_data(self, table):
         """Extract data from table."""
@@ -214,7 +214,7 @@ class GeoPlot:
                  color='tab:blue')
         ax2.set_ylabel(self.args.column, color='tab:blue')
         if self.args.log:
-            ax2.set_yscale('log')
+            ax2.set_yscale('log', basey=2)
         ax2.tick_params(axis='y', labelcolor='tab:blue')
         fig.set_size_inches(20, 10, forward=True)
         fig.tight_layout()
