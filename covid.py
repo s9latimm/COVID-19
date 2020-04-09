@@ -31,9 +31,8 @@ import math
 import signal
 import argparse
 import datetime
-from datetime import timedelta
 import pprint
-import matplotlib.pyplot as plt
+import matplotlib.pyplot
 import xlrd
 import requests
 
@@ -46,81 +45,109 @@ class GeoPlot:
     """Visualize up-to-date case data published by the ECDC."""
 
     def __init__(self):
-        self.date = None
-        self.parser = argparse.ArgumentParser()
         self.args = None
         self.countries = None
 
-    def parse_args(self):
+    def parse_args(self, args):
         """Parse options."""
-        self.parser.add_argument('-c',
-                                 '--column',
-                                 metavar='<str>',
-                                 type=str,
-                                 default='cases',
-                                 help=f'one of {list(COLUMNS.keys())}')
-        self.parser.add_argument(
+        parser = argparse.ArgumentParser()
+
+        def column_ty(value):
+            try:
+                COLUMNS[value]
+            except KeyError as err:
+                raise argparse.ArgumentTypeError(
+                    f'{err.__class__.__name__}: {err}')
+            return value
+
+        parser.add_argument('-c',
+                            '--column',
+                            metavar='<str>',
+                            type=column_ty,
+                            default='cases',
+                            help=f'one of {list(COLUMNS.keys())}')
+        parser.add_argument(
             '-C',
             '--country',
             metavar='<list<str>>',
             type=str,
             default='*',
             help=f'comma separated list of GeoIDs (e.g. "DE,US")')
-        self.parser.add_argument('-S',
-                                 '--suffix',
-                                 metavar='<str>',
-                                 type=str,
-                                 default='',
-                                 help=f'use suffix in filename instead of date')
-        self.parser.add_argument('-s',
-                                 '--show',
-                                 default=False,
-                                 action='store_true',
-                                 help='show plot instead of saving')
-        self.parser.add_argument('-d',
-                                 '--diff',
-                                 default=False,
-                                 action='store_true',
-                                 help='plot differentiation')
-        self.parser.add_argument(
-            '-D',
-            '--date',
-            metavar='<datetime>',
-            type=str,
-            default=datetime.date.today().strftime('%Y-%m-%d'),
-            help=f'date (yyyy-mm-dd)')
-        self.parser.add_argument('-L',
-                                 '--list',
-                                 default=False,
-                                 action='store_true',
-                                 help='list available GeoIDs and exit')
-        self.parser.add_argument('-l',
-                                 '--log',
-                                 default=False,
-                                 action='store_true',
-                                 help='logarithmic scale')
-        self.args = self.parser.parse_args()
+
+        def base_ty(value):
+            try:
+                math.log(1, int(value))
+            except (ValueError, ZeroDivisionError) as err:
+                raise argparse.ArgumentTypeError(
+                    f'{err.__class__.__name__}: {err}')
+            return int(value)
+
+        parser.add_argument('-b',
+                            '--base',
+                            metavar='<float>',
+                            type=base_ty,
+                            default=10,
+                            help=f'logarithm base')
+        parser.add_argument('-S',
+                            '--suffix',
+                            metavar='<str>',
+                            type=str,
+                            default='',
+                            help=f'use suffix in filename instead of date')
+        parser.add_argument('-s',
+                            '--show',
+                            default=False,
+                            action='store_true',
+                            help='show plot instead of saving')
+        parser.add_argument('-d',
+                            '--diff',
+                            default=False,
+                            action='store_true',
+                            help='plot differentiation')
+
+        def date_ty(value):
+            try:
+                return datetime.datetime.strptime(value, '%Y-%m-%d')
+            except ValueError as err:
+                raise argparse.ArgumentTypeError(
+                    f'{err.__class__.__name__}: {err}')
+
+        parser.add_argument('-D',
+                            '--date',
+                            metavar='<datetime>',
+                            type=date_ty,
+                            default=datetime.date.today().strftime('%Y-%m-%d'),
+                            help=f'date (yyyy-mm-dd)')
+        parser.add_argument('-L',
+                            '--list',
+                            default=False,
+                            action='store_true',
+                            help='list available GeoIDs and exit')
+        parser.add_argument('-l',
+                            '--log',
+                            required='--base' in args or '-b' in args,
+                            default=False,
+                            action='store_true',
+                            help='logarithmic scale')
+        self.args = parser.parse_args(args)
+
+    @staticmethod
+    def error(msg):
+        """Print message and exit."""
+        print(f'[ERROR] {msg}')
+        sys.exit(1)
 
     def poll(self):
         """Get raw sheet from ECDC server."""
-        rep = 0
-        while True:
-            url = f'{URL}-{self.date.strftime("%Y-%m-%d")}.xlsx'
-            try:
-                req = requests.get(url)
-            except requests.exceptions.ConnectionError as err:
-                self.parser.error(err)
-            print(f'[GET] {url} {req.status_code}')
-            if req.status_code == 200:
-                break
-            if rep > 6:
-                self.parser.error('could not get dataset')
-            elif rep == 3:
-                self.date = datetime.date.today()
-            else:
-                self.date -= timedelta(days=1)
-            rep += 1
-        return req.content
+        url = f'{URL}-{self.args.date.strftime("%Y-%m-%d")}.xlsx'
+        try:
+            print(f'[GET] {url}')
+            req = requests.get(url)
+            if req.status_code != 200:
+                self.error(req.status_code)
+            return req.content
+        except requests.exceptions.RequestException as err:
+            self.error(f'{err.__class__.__name__}: {err}')
 
     @staticmethod
     def get_regions(table):
@@ -136,10 +163,9 @@ class GeoPlot:
         countries['*'] = 'World'
         return countries
 
-    @staticmethod
-    def log(number):
-        """Calculate logarithm base 10."""
-        return math.log2(max(number, 1))
+    def log(self, number):
+        """Calculate logarithm."""
+        return math.log(max(number, 1), self.args.base)
 
     def get_data(self, table):
         """Extract data from table."""
@@ -161,8 +187,8 @@ class GeoPlot:
             except ValueError:
                 continue
         if not raw:
-            self.parser.error('no data')
-        data = [(0, 0, 0, self.date)]
+            self.error('no data')
+        data = [(0, 0, 0, self.args.date)]
         for i in range(
                 min({i for i in raw if i > 0 and raw[i] > 0}) - 1,
                 max(raw.keys()) + 1):
@@ -190,7 +216,7 @@ class GeoPlot:
 
     def plot(self, data):
         """Show or save plot of data."""
-        fig, ax1 = plt.subplots()
+        fig, ax1 = matplotlib.pyplot.subplots()
         ax1.margins(x=.01, y=.01)
         ax1.spines['top'].set_visible(False)
         if self.args.diff:
@@ -204,7 +230,7 @@ class GeoPlot:
         ax1.tick_params(axis='y', labelcolor='tab:red')
         ax1.tick_params(axis='x', labelrotation=90)
         ax1.set_title(
-            f'COVID-19 {" ".join(self.countries)}{" LOG" if self.args.log else ""}'
+            f'COVID-19 {" ".join(self.countries)}{f" LOG{self.args.base}" if self.args.log else ""}'
             f'{" DIFF" if self.args.diff else ""} ({data[0][3]} → {data[-1][3]})'
         )
         ax2 = ax1.twinx()
@@ -214,47 +240,43 @@ class GeoPlot:
                  color='tab:blue')
         ax2.set_ylabel(self.args.column, color='tab:blue')
         if self.args.log:
-            ax2.set_yscale('log', basey=2)
+            ax2.set_yscale('log', basey=self.args.base)
         ax2.tick_params(axis='y', labelcolor='tab:blue')
+
         fig.set_size_inches(20, 10, forward=True)
         fig.tight_layout()
         if self.args.show:
-            plt.show()
+            print('[SHOW]')
+            matplotlib.pyplot.show()
         else:
             os.makedirs('plots', exist_ok=True)
-            suffix = self.date.strftime(
-                "%Y-%m-%d") if not self.args.suffix else self.args.suffix
+            suffix = self.args.date.strftime(
+                '%Y-%m-%d') if not self.args.suffix else self.args.suffix
             file = f'plots/covid-19-{"-".join(self.countries)}-{self.args.column}' \
-                   f'{"-log" if self.args.log else ""}' \
+                   f'{f"-log{self.args.base}" if self.args.log else ""}' \
                    f'{"-diff" if self.args.diff else ""}' \
                    f'-{suffix}' \
                    f'.svg'.lower()
             print(f'[SAVE] {os.path.abspath(file)}')
-            plt.savefig(file)
-        print('[CLOSE]')
-        plt.close()
+            matplotlib.pyplot.savefig(file)
+        print('[EXIT]')
+        matplotlib.pyplot.close()
 
     def main(self):
         """Entry point."""
         signal.signal(signal.SIGINT, self.handler)
         signal.signal(signal.SIGTERM, self.handler)
-        self.parse_args()
-        try:
-            self.date = datetime.datetime.strptime(self.args.date, '%Y-%m-%d')
-        except ValueError as err:
-            self.parser.error(err)
+        self.parse_args(sys.argv[1:])
         table = xlrd.open_workbook(file_contents=self.poll()).sheet_by_index(0)
         if self.args.list:
             pprint.PrettyPrinter(indent=2).pprint(self.get_regions(table))
             return 0
-        if self.args.column not in COLUMNS.keys():
-            self.parser.error(f'column must be one of {list(COLUMNS)}')
         self.countries = sorted(
             {i.strip() for i in self.args.country.strip().split(',')})
         regions = self.get_regions(table)
         for country in self.countries:
             if country not in regions.keys():
-                self.parser.error(f'no data for {country}')
+                self.error(f'no data for {country}')
         if '*' in self.countries:
             self.countries = {'WORLD'}
         self.plot(self.get_data(table))

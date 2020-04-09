@@ -7,8 +7,8 @@ Please note that daily numbers only include yesterday (today's cases will appear
 ### Usage
 
 ```
-usage: covid.py [-h] [-c <str>] [-C <list<str>>] [-S <str>] [-s] [-d]
-                [-D <datetime>] [-L] [-l]
+usage: covid.py [-h] [-c <str>] [-C <list<str>>] [-b <float>] [-S <str>] [-s]
+                [-d] [-D <datetime>] [-L] [-l]
 
 optional arguments:
   -h, --help            show this help message and exit
@@ -16,6 +16,8 @@ optional arguments:
                         one of ['cases', 'deaths']
   -C <list<str>>, --country <list<str>>
                         comma separated list of GeoIDs (e.g. "DE,US")
+  -b <float>, --base <float>
+                        logarithm base
   -S <str>, --suffix <str>
                         use suffix in filename instead of date
   -s, --show            show plot instead of saving
@@ -28,6 +30,8 @@ optional arguments:
 
 ### Examples (updated daily)
 
-![WORLD LOG](https://gitlab.com/s9latimm/covid-19-geoplot/-/jobs/artifacts/master/raw/plots/covid-19-world-cases-log-example.svg?job=deploy&sanitize=true)
-![DE LIN](https://gitlab.com/s9latimm/covid-19-geoplot/-/jobs/artifacts/master/raw/plots/covid-19-de-cases-example.svg?job=deploy&sanitize=true)
-![DE LOG DIFF](https://gitlab.com/s9latimm/covid-19-geoplot/-/jobs/artifacts/master/raw/plots/covid-19-de-cases-log-diff-example.svg?job=deploy&sanitize=true)
+![WORLD LOG10](https://gitlab.com/s9latimm/covid-19-geoplot/-/jobs/artifacts/master/raw/plots/covid-19-world-cases-log10
+-example.svg?job=deploy&sanitize=true)
+![DE](https://gitlab.com/s9latimm/covid-19-geoplot/-/jobs/artifacts/master/raw/plots/covid-19-de-cases-example.svg?job=deploy&sanitize=true)
+![DE LOG2 DIFF](https://gitlab.com/s9latimm/covid-19-geoplot/-/jobs/artifacts/master/raw/plots/covid-19-de-cases-log2
+-diff-example.svg?job=deploy&sanitize=true)

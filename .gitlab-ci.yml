@@ -20,7 +20,11 @@ check:
   stage: check
   script:
     - venv/bin/yapf --style google --parallel --verbose --diff covid.py
-    - venv/bin/pylint covid.py
+    - PYLINTHOME=pylint venv/bin/pylint covid.py
+  artifacts:
+    paths:
+      - pylint/
+    expire_in: 1w
 
 deploy:
   <<: *template
@@ -30,10 +34,10 @@ deploy:
   script:
     - venv/bin/python3 covid.py --log --suffix example
     - venv/bin/python3 covid.py --country DE --suffix example
-    - venv/bin/python3 covid.py --country DE --log --diff --suffix example
+    - venv/bin/python3 covid.py --country DE --log --base 2 --diff --suffix example
   artifacts:
     paths:
-      - plots/covid-19-world-cases-log-example.svg
+      - plots/covid-19-world-cases-log10-example.svg
       - plots/covid-19-de-cases-example.svg
-      - plots/covid-19-de-cases-log-diff-example.svg
+      - plots/covid-19-de-cases-log2-diff-example.svg
     expire_in: 1w
