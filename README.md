@@ -1,13 +1,13 @@
 # COVID-19-GeoPlot
 
-A tool to visualize daily case data published by the [ECDC](https://www.ecdc.europa.eu).
+A tool to visualize daily case data published by the [ECDC](https://www.ecdc.europa.eu/en/copyright).
 
 Please note that daily numbers only include yesterday (today's cases will appear tomorrow) and request may not work until current data is uploaded.
 
 ### Usage
 
 ```
-usage: covid.py [-h] [-c <str>] [-C <list<str>>] [-b <float>] [-S <str>] [-s]
+usage: covid.py [-h] [-c <str>] [-C <list<str>>] [-b <int>] [-S <str>] [-s]
                 [-d] [-D <datetime>] [-L] [-l]
 
 optional arguments:
@@ -16,7 +16,7 @@ optional arguments:
                         one of ['cases', 'deaths']
   -C <list<str>>, --country <list<str>>
                         comma separated list of GeoIDs (e.g. "DE,US")
-  -b <float>, --base <float>
+  -b <int>, --base <int>
                         logarithm base
   -S <str>, --suffix <str>
                         use suffix in filename instead of date

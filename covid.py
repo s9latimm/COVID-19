@@ -31,8 +31,7 @@ import math
 import signal
 import argparse
 import datetime
-import pprint
-import matplotlib.pyplot
+import matplotlib.pyplot as plt
 import xlrd
 import requests
 
@@ -46,7 +45,7 @@ class GeoPlot:
 
     def __init__(self):
         self.args = None
-        self.countries = None
+        self.ids = None
 
     def parse_args(self, args):
         """Parse options."""
@@ -84,7 +83,7 @@ class GeoPlot:
 
         parser.add_argument('-b',
                             '--base',
-                            metavar='<float>',
+                            metavar='<int>',
                             type=base_ty,
                             default=10,
                             help=f'logarithm base')
@@ -116,7 +115,7 @@ class GeoPlot:
                             '--date',
                             metavar='<datetime>',
                             type=date_ty,
-                            default=datetime.date.today().strftime('%Y-%m-%d'),
+                            default=datetime.date.today(),
                             help=f'date (yyyy-mm-dd)')
         parser.add_argument('-L',
                             '--list',
@@ -138,7 +137,7 @@ class GeoPlot:
         sys.exit(1)
 
     def poll(self):
-        """Get raw sheet from ECDC server."""
+        """Get raw data from ECDC server."""
         url = f'{URL}-{self.args.date.strftime("%Y-%m-%d")}.xlsx'
         try:
             print(f'[GET] {url}')
@@ -151,17 +150,13 @@ class GeoPlot:
 
     @staticmethod
     def get_regions(table):
-        """Collect all available GeoIDs."""
-        countries = dict()
-        skip = True
-        for row in table.get_rows():
-            if skip:
-                skip = False
-                continue
-            countries[row[7].value.strip()] = row[6].value.replace('_',
-                                                                   ' ').strip()
-        countries['*'] = 'World'
-        return countries
+        """Collect available GeoIDs."""
+        regions = {
+            i[7].value.strip(): i[6].value.replace('_', ' ').strip()
+            for i in list(table.get_rows())[1:]
+        }
+        regions['*'] = 'World'
+        return regions
 
     def log(self, number):
         """Calculate logarithm."""
@@ -171,40 +166,35 @@ class GeoPlot:
         """Extract data from table."""
         raw = dict()
         idx = COLUMNS[self.args.column]
-        skip = True
-        for row in table.get_rows():
-            if skip:
-                skip = False
-                continue
+        for row in list(table.get_rows())[1:]:
             try:
-                if 'WORLD' in self.countries or row[7].value.strip(
-                ) in self.countries:
+                if 'WORLD' in self.ids or row[7].value.strip() in self.ids:
                     key = int(row[0].value)
                     if key in raw.keys():
                         raw[key] += int(row[idx].value)
                     else:
                         raw[key] = int(row[idx].value)
-            except ValueError:
-                continue
-        if not raw:
-            self.error('no data')
+            except ValueError as err:
+                self.error(f'{err.__class__.__name__}: {err}')
+        assert raw
         data = [(0, 0, 0, self.args.date)]
         for i in range(
                 min({i for i in raw if i > 0 and raw[i] > 0}) - 1,
                 max(raw.keys()) + 1):
             if i in raw.keys():
                 val = data[-1][1] + raw[i]
-                diff = self.log(val) - self.log(
-                    data[-1][1]) if self.args.log else val - data[-1][1]
                 data.append(
-                    (raw[i], val if not self.args.log else max(val, 1), diff,
+                    (raw[i], val if not self.args.log else max(val, 1),
+                     (self.log(val) -
+                      self.log(data[-1][1]) if self.args.log else val -
+                      data[-1][1]),
                      datetime.datetime(*xlrd.xldate_as_tuple(i, 0)).strftime(
                          '%Y-%m-%d')))
             else:
-                val = data[-1][1]
                 data.append(
-                    (0, val if not self.args.log else max(val, 1), 0,
-                     datetime.datetime(*xlrd.xldate_as_tuple(i, 0)).strftime(
+                    (0,
+                     data[-1][1] if not self.args.log else max(data[-1][1], 1),
+                     0, datetime.datetime(*xlrd.xldate_as_tuple(i, 0)).strftime(
                          '%Y-%m-%d')))
         return data[1:]
 
@@ -216,7 +206,7 @@ class GeoPlot:
 
     def plot(self, data):
         """Show or save plot of data."""
-        fig, ax1 = matplotlib.pyplot.subplots()
+        fig, ax1 = plt.subplots()
         ax1.margins(x=.01, y=.01)
         ax1.spines['top'].set_visible(False)
         if self.args.diff:
@@ -230,7 +220,7 @@ class GeoPlot:
         ax1.tick_params(axis='y', labelcolor='tab:red')
         ax1.tick_params(axis='x', labelrotation=90)
         ax1.set_title(
-            f'COVID-19 {" ".join(self.countries)}{f" LOG{self.args.base}" if self.args.log else ""}'
+            f'COVID-19 {" ".join(self.ids)}{f" LOG{self.args.base}" if self.args.log else ""}'
             f'{" DIFF" if self.args.diff else ""} ({data[0][3]} → {data[-1][3]})'
         )
         ax2 = ax1.twinx()
@@ -247,20 +237,20 @@ class GeoPlot:
         fig.tight_layout()
         if self.args.show:
             print('[SHOW]')
-            matplotlib.pyplot.show()
+            plt.show()
         else:
             os.makedirs('plots', exist_ok=True)
             suffix = self.args.date.strftime(
                 '%Y-%m-%d') if not self.args.suffix else self.args.suffix
-            file = f'plots/covid-19-{"-".join(self.countries)}-{self.args.column}' \
+            file = f'plots/covid-19-{"-".join(self.ids)}-{self.args.column}' \
                    f'{f"-log{self.args.base}" if self.args.log else ""}' \
                    f'{"-diff" if self.args.diff else ""}' \
                    f'-{suffix}' \
                    f'.svg'.lower()
             print(f'[SAVE] {os.path.abspath(file)}')
-            matplotlib.pyplot.savefig(file)
-        print('[EXIT]')
-        matplotlib.pyplot.close()
+            plt.savefig(file)
+        print('[CLOSE]')
+        plt.close()
 
     def main(self):
         """Entry point."""
@@ -268,18 +258,21 @@ class GeoPlot:
         signal.signal(signal.SIGTERM, self.handler)
         self.parse_args(sys.argv[1:])
         table = xlrd.open_workbook(file_contents=self.poll()).sheet_by_index(0)
-        if self.args.list:
-            pprint.PrettyPrinter(indent=2).pprint(self.get_regions(table))
-            return 0
-        self.countries = sorted(
-            {i.strip() for i in self.args.country.strip().split(',')})
         regions = self.get_regions(table)
-        for country in self.countries:
-            if country not in regions.keys():
-                self.error(f'no data for {country}')
-        if '*' in self.countries:
-            self.countries = {'WORLD'}
-        self.plot(self.get_data(table))
+        if self.args.list:
+            _ = [print(f'[INFO] \'{i[0]}\': {i[1]}') for i in regions.items()]
+        else:
+            self.ids = sorted(
+                {i.strip() for i in self.args.country.strip().split(',')})
+            _ = [
+                print(f'[INFO] \'{i}\': {regions[i]}')
+                if i in regions.keys() else self.error(f'KeyError: \'{i}\'')
+                for i in self.ids
+            ]
+            if '*' in self.ids:
+                self.ids = {'WORLD'}
+            self.plot(self.get_data(table))
+        print('[EXIT]')
         return 0
 
 
