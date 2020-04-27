@@ -69,7 +69,7 @@ class GeoPlot:
             metavar='<list<str>>',
             type=str,
             default='*',
-            help=f'comma separated list of country codes (e.g. "DEU,USA")')
+            help='comma separated list of country codes (e.g. "DEU,USA")')
 
         def base_ty(value):
             try:
@@ -84,13 +84,13 @@ class GeoPlot:
                             metavar='<int>',
                             type=base_ty,
                             default=10,
-                            help=f'logarithm base')
+                            help='logarithm base')
         parser.add_argument('-S',
                             '--suffix',
                             metavar='<str>',
                             type=str,
                             default='',
-                            help=f'use suffix in filename instead of date')
+                            help='use suffix in filename instead of date')
         parser.add_argument('-s',
                             '--show',
                             default=False,
@@ -109,7 +109,7 @@ class GeoPlot:
                             metavar='<datetime>',
                             type=date_ty,
                             default=datetime.date.today().strftime('%Y-%m-%d'),
-                            help=f'date (yyyy-mm-dd)')
+                            help='date (yyyy-mm-dd)')
         parser.add_argument('-L',
                             '--list',
                             default=False,
@@ -211,7 +211,7 @@ class GeoPlot:
         ax1.margins(x=.01, y=.01)
         ax1.spines['top'].set_visible(False)
         ax1.bar(labels, [i[2] for i in data], color='tab:red')
-        ax1.set_ylabel(f'differentiation', color='tab:red')
+        ax1.set_ylabel('differentiation', color='tab:red')
         ax1.tick_params(axis='y', labelcolor='tab:red')
         ax1.tick_params(axis='x', labelrotation=90)
         ax1.set_title(
