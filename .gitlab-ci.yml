@@ -13,7 +13,7 @@ stages:
     - (test -x venv/bin/python3 && test -x venv/bin/pip3) || (apt-get update -qy && apt-get install -y python3-pip python3-venv && python3 -m venv venv)
     - venv/bin/pip3 install wheel
     - venv/bin/pip3 install -r requirements.txt
-    - apt-get install fonts-humor-sans
+    # - mkdir -p ~/.fonts && curl -o ~/.fonts/Humor-Sans-1.0.ttf http://antiyawn.com/uploads/Humor-Sans-1.0.ttf && fc-cache -rv
   timeout: 10m
 
 check:
