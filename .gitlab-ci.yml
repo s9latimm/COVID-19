@@ -33,12 +33,12 @@ deploy:
   needs:
     - check
   script:
-    - venv/bin/python3 covid.py --log --suffix example
+    - venv/bin/python3 covid.py --suffix example
     - venv/bin/python3 covid.py --country DEU --suffix example
     - venv/bin/python3 covid.py --country DEU --log --base 2 --suffix example
   artifacts:
     paths:
-      - plots/covid-19-world-cases-log10-example.svg
+      - plots/covid-19-world-cases-example.svg
       - plots/covid-19-deu-cases-example.svg
       - plots/covid-19-deu-cases-log2-example.svg
     expire_in: 1w

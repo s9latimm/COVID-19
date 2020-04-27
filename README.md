@@ -30,7 +30,7 @@ optional arguments:
 
 ### Examples (updated daily)
 
-![WORLD LOG10](https://gitlab.com/s9latimm/covid-19-geoplot/-/jobs/artifacts/master/raw/plots/covid-19-world-cases-log10-example.svg?job=deploy&sanitize=true)
+![WORLD LOG10](https://gitlab.com/s9latimm/covid-19-geoplot/-/jobs/artifacts/master/raw/plots/covid-19-world-cases-example.svg?job=deploy&sanitize=true)
 
 ![DE](https://gitlab.com/s9latimm/covid-19-geoplot/-/jobs/artifacts/master/raw/plots/covid-19-deu-cases-example.svg?job=deploy&sanitize=true)
 
