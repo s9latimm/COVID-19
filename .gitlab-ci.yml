@@ -13,6 +13,7 @@ stages:
     - (test -x venv/bin/python3 && test -x venv/bin/pip3) || (apt-get update -qy && apt-get install -y python3-pip python3-venv && python3 -m venv venv)
     - venv/bin/pip3 install wheel
     - venv/bin/pip3 install -r requirements.txt
+    - apt-get install fonts-humor-sans
   timeout: 10m
 
 check:
@@ -33,11 +34,11 @@ deploy:
     - check
   script:
     - venv/bin/python3 covid.py --log --suffix example
-    - venv/bin/python3 covid.py --country DE --suffix example
-    - venv/bin/python3 covid.py --country DE --log --base 2 --diff --suffix example
+    - venv/bin/python3 covid.py --country DEU --suffix example
+    - venv/bin/python3 covid.py --country DEU --log --base 2 --diff --suffix example
   artifacts:
     paths:
       - plots/covid-19-world-cases-log10-example.svg
-      - plots/covid-19-de-cases-example.svg
-      - plots/covid-19-de-cases-log2-diff-example.svg
+      - plots/covid-19-deu-cases-example.svg
+      - plots/covid-19-deu-cases-log2-diff-example.svg
     expire_in: 1w

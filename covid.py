@@ -32,12 +32,10 @@ import signal
 import argparse
 import datetime
 import matplotlib.pyplot as plt
-import xlrd
 import requests
 
 COLUMNS = {'cases': 4, 'deaths': 5}
-URL = 'https://www.ecdc.europa.eu/sites/default/files/documents/' \
-      'COVID-19-geographic-disbtribution-worldwide'
+URL = 'https://opendata.ecdc.europa.eu/covid19/casedistribution/csv'
 
 
 class GeoPlot:
@@ -71,7 +69,7 @@ class GeoPlot:
             metavar='<list<str>>',
             type=str,
             default='*',
-            help=f'comma separated list of GeoIDs (e.g. "DE,US")')
+            help=f'comma separated list of country codes (e.g. "DEU,USA")')
 
         def base_ty(value):
             try:
@@ -98,11 +96,6 @@ class GeoPlot:
                             default=False,
                             action='store_true',
                             help='show plot instead of saving')
-        parser.add_argument('-d',
-                            '--diff',
-                            default=False,
-                            action='store_true',
-                            help='plot differentiation')
 
         def date_ty(value):
             try:
@@ -115,19 +108,24 @@ class GeoPlot:
                             '--date',
                             metavar='<datetime>',
                             type=date_ty,
-                            default=datetime.date.today(),
+                            default=datetime.date.today().strftime('%Y-%m-%d'),
                             help=f'date (yyyy-mm-dd)')
         parser.add_argument('-L',
                             '--list',
                             default=False,
                             action='store_true',
-                            help='list available GeoIDs and exit')
+                            help='list available country codes and exit')
         parser.add_argument('-l',
                             '--log',
                             required='--base' in args or '-b' in args,
                             default=False,
                             action='store_true',
                             help='logarithmic scale')
+        parser.add_argument('-x',
+                            '--xkcd',
+                            default=False,
+                            action='store_true',
+                            help='xkcd style')
         self.args = parser.parse_args(args)
 
     @staticmethod
@@ -138,22 +136,20 @@ class GeoPlot:
 
     def poll(self):
         """Get raw data from ECDC server."""
-        url = f'{URL}-{self.args.date.strftime("%Y-%m-%d")}.xlsx'
         try:
-            print(f'[GET] {url}')
-            req = requests.get(url)
+            print(f'[GET] {URL}')
+            req = requests.get(URL)
             if req.status_code != 200:
                 self.error(req.status_code)
-            return req.content
+            return [i.split(',') for i in req.content.decode().splitlines()][1:]
         except requests.exceptions.RequestException as err:
             self.error(f'{err.__class__.__name__}: {err}')
 
     @staticmethod
-    def get_regions(table):
-        """Collect available GeoIDs."""
+    def get_regions(content):
+        """Collect available country codes."""
         regions = {
-            i[7].value.strip(): i[6].value.replace('_', ' ').strip()
-            for i in list(table.get_rows())[1:]
+            i[8].strip(): i[6].replace('_', ' ').strip() for i in content
         }
         regions['*'] = 'World'
         return regions
@@ -162,40 +158,39 @@ class GeoPlot:
         """Calculate logarithm."""
         return math.log(max(number, 1), self.args.base)
 
-    def get_data(self, table):
+    def get_data(self, content):
         """Extract data from table."""
         raw = dict()
         idx = COLUMNS[self.args.column]
-        for row in list(table.get_rows())[1:]:
+        for row in content:
             try:
-                if 'WORLD' in self.ids or row[7].value.strip() in self.ids:
-                    key = int(row[0].value)
+                if 'WORLD' in self.ids or row[8].strip() in self.ids:
+                    key = int(
+                        datetime.datetime.strptime(row[0],
+                                                   '%d/%m/%Y').timestamp())
                     if key in raw.keys():
-                        raw[key] += int(row[idx].value)
+                        raw[key] += int(row[idx])
                     else:
-                        raw[key] = int(row[idx].value)
+                        raw[key] = int(row[idx])
             except ValueError as err:
                 self.error(f'{err.__class__.__name__}: {err}')
         assert raw
-        data = [(0, 0, 0, self.args.date)]
-        for i in range(
-                min({i for i in raw if i > 0 and raw[i] > 0}) - 1,
-                max(raw.keys()) + 1):
+        data = [(0, 0, 0, 0)]
+        i = min(raw.keys())
+        while i <= min(max(raw.keys()), int(self.args.date.timestamp())):
             if i in raw.keys():
                 val = data[-1][1] + raw[i]
-                data.append(
-                    (raw[i], val if not self.args.log else max(val, 1),
-                     (self.log(val) -
-                      self.log(data[-1][1]) if self.args.log else val -
-                      data[-1][1]),
-                     datetime.datetime(*xlrd.xldate_as_tuple(i, 0)).strftime(
-                         '%Y-%m-%d')))
+                data.append((raw[i], val if not self.args.log else max(val, 1),
+                             (self.log(val) -
+                              self.log(data[-1][1]) if self.args.log else val -
+                              data[-1][1]), i))
             else:
                 data.append(
                     (0,
                      data[-1][1] if not self.args.log else max(data[-1][1], 1),
-                     0, datetime.datetime(*xlrd.xldate_as_tuple(i, 0)).strftime(
-                         '%Y-%m-%d')))
+                     0, i))
+            i = int((datetime.datetime.fromtimestamp(i) +
+                     datetime.timedelta(days=1)).timestamp())
         return data[1:]
 
     @staticmethod
@@ -206,46 +201,45 @@ class GeoPlot:
 
     def plot(self, data):
         """Show or save plot of data."""
+        labels = [
+            datetime.datetime.fromtimestamp(i[3]).strftime('%Y-%m-%d')
+            for i in data
+        ]
+        if self.args.xkcd:
+            plt.xkcd()
         fig, ax1 = plt.subplots()
         ax1.margins(x=.01, y=.01)
         ax1.spines['top'].set_visible(False)
-        if self.args.diff:
-            ax1.plot([i[3] for i in data], [i[2] for i in data],
-                     '-',
-                     color='tab:red')
-            ax1.set_ylabel(f'differentiation', color='tab:red')
-        else:
-            ax1.bar([i[3] for i in data], [i[0] for i in data], color='tab:red')
-            ax1.set_ylabel(f'new {self.args.column} per day', color='tab:red')
+        ax1.bar(labels, [i[2] for i in data], color='tab:red')
+        ax1.set_ylabel(f'differentiation', color='tab:red')
         ax1.tick_params(axis='y', labelcolor='tab:red')
         ax1.tick_params(axis='x', labelrotation=90)
         ax1.set_title(
-            f'COVID-19 {" ".join(self.ids)}{f" LOG{self.args.base}" if self.args.log else ""}'
-            f'{" DIFF" if self.args.diff else ""} ({data[0][3]} → {data[-1][3]})'
+            f'COVID-19 {" ".join(self.ids)}{f" LOG{self.args.base}" if self.args.log else ""} '
+            f'({datetime.datetime.fromtimestamp(data[0][3]).strftime("%Y-%m-%d")} – '
+            f'{datetime.datetime.fromtimestamp(data[-1][3]).strftime("%Y-%m-%d")})'
         )
         ax2 = ax1.twinx()
         ax2.margins(x=.01, y=.01)
-        ax2.plot([i[3] for i in data], [i[1] for i in data],
-                 'o-',
-                 color='tab:blue')
+        ax2.plot(labels, [i[1] for i in data], 'o-', color='tab:blue')
         ax2.set_ylabel(self.args.column, color='tab:blue')
         if self.args.log:
             ax2.set_yscale('log', basey=self.args.base)
         ax2.tick_params(axis='y', labelcolor='tab:blue')
-
-        fig.set_size_inches(20, 10, forward=True)
+        height = math.ceil(len(labels) / 10)
+        fig.set_size_inches(height * 2, height, forward=True)
         fig.tight_layout()
         if self.args.show:
             print('[SHOW]')
             plt.show()
         else:
             os.makedirs('plots', exist_ok=True)
-            suffix = self.args.date.strftime(
-                '%Y-%m-%d') if not self.args.suffix else self.args.suffix
+            suffix = datetime.datetime.fromtimestamp(data[-1][3]).strftime(
+                "%Y-%m-%d") if not self.args.suffix else self.args.suffix
             file = f'plots/covid-19-{"-".join(self.ids)}-{self.args.column}' \
                    f'{f"-log{self.args.base}" if self.args.log else ""}' \
-                   f'{"-diff" if self.args.diff else ""}' \
                    f'-{suffix}' \
+                   f'{"-xkcd" if self.args.xkcd else ""}' \
                    f'.svg'.lower()
             print(f'[SAVE] {os.path.abspath(file)}')
             plt.savefig(file)
@@ -257,13 +251,14 @@ class GeoPlot:
         signal.signal(signal.SIGINT, self.handler)
         signal.signal(signal.SIGTERM, self.handler)
         self.parse_args(sys.argv[1:])
-        table = xlrd.open_workbook(file_contents=self.poll()).sheet_by_index(0)
-        regions = self.get_regions(table)
+        content = self.poll()
+        regions = self.get_regions(content)
         if self.args.list:
             _ = [print(f'[INFO] \'{i[0]}\': {i[1]}') for i in regions.items()]
         else:
-            self.ids = sorted(
-                {i.strip() for i in self.args.country.strip().split(',')})
+            self.ids = sorted({
+                i.strip().upper() for i in self.args.country.strip().split(',')
+            })
             _ = [
                 print(f'[INFO] \'{i}\': {regions[i]}')
                 if i in regions.keys() else self.error(f'KeyError: \'{i}\'')
@@ -271,7 +266,7 @@ class GeoPlot:
             ]
             if '*' in self.ids:
                 self.ids = {'WORLD'}
-            self.plot(self.get_data(table))
+            self.plot(self.get_data(content))
         print('[EXIT]')
         return 0
 
