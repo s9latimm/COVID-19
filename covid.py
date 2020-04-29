@@ -164,7 +164,8 @@ class GeoPlot:
         idx = COLUMNS[self.args.column]
         for row in content:
             try:
-                if 'WORLD' in self.ids or row[8].strip() in self.ids:
+                if ('WORLD' in self.ids or
+                        row[8].strip() in self.ids) and int(row[idx]) > 0:
                     key = int(
                         datetime.datetime.strptime(row[0],
                                                    '%d/%m/%Y').timestamp())
@@ -175,23 +176,23 @@ class GeoPlot:
             except ValueError as err:
                 self.error(f'{err.__class__.__name__}: {err}')
         assert raw
-        data = [(0, 0, 0, 0)]
         i = min(raw.keys())
+        data = [(0, 1 if self.args.log else 0, 0,
+                 int((datetime.datetime.fromtimestamp(i) -
+                      datetime.timedelta(days=1)).timestamp()))]
         while i <= min(max(raw.keys()), int(self.args.date.timestamp())):
+            assert not self.args.log or data[-1][1] > 0
             if i in raw.keys():
                 val = data[-1][1] + raw[i]
-                data.append((raw[i], val if not self.args.log else max(val, 1),
+                data.append((raw[i], val,
                              (self.log(val) -
                               self.log(data[-1][1]) if self.args.log else val -
                               data[-1][1]), i))
             else:
-                data.append(
-                    (0,
-                     data[-1][1] if not self.args.log else max(data[-1][1], 1),
-                     0, i))
+                data.append((0, data[-1][1], 0, i))
             i = int((datetime.datetime.fromtimestamp(i) +
                      datetime.timedelta(days=1)).timestamp())
-        return data[1:]
+        return data
 
     @staticmethod
     def handler(*_):
