@@ -121,6 +121,11 @@ class GeoPlot:
                             default=False,
                             action='store_true',
                             help='logarithmic scale')
+        parser.add_argument('-d',
+                            '--dark',
+                            default=False,
+                            action='store_true',
+                            help='dark background')
         parser.add_argument('-x',
                             '--xkcd',
                             default=False,
@@ -208,6 +213,8 @@ class GeoPlot:
         ]
         if self.args.xkcd:
             plt.xkcd()
+        if self.args.dark:
+            plt.style.use('dark_background')
         fig, ax1 = plt.subplots()
         ax1.margins(x=.01, y=.01)
         ax1.spines['top'].set_visible(False)
@@ -243,7 +250,7 @@ class GeoPlot:
                    f'{"-xkcd" if self.args.xkcd else ""}' \
                    f'.svg'.lower()
             print(f'[SAVE] {os.path.abspath(file)}')
-            plt.savefig(file)
+            plt.savefig(file, transparent=True)
         print('[CLOSE]')
         plt.close()
 

@@ -8,7 +8,7 @@ Please note that daily numbers only include yesterday (today's cases will appear
 
 ```
 usage: covid.py [-h] [-c <str>] [-C <list<str>>] [-b <int>] [-S <str>] [-s]
-                [-D <datetime>] [-L] [-l] [-x]
+                [-D <datetime>] [-L] [-l] [-d] [-x]
 
 optional arguments:
   -h, --help            show this help message and exit
@@ -25,6 +25,7 @@ optional arguments:
                         date (yyyy-mm-dd)
   -L, --list            list available country codes and exit
   -l, --log             logarithmic scale
+  -d, --dark            dark background
   -x, --xkcd            xkcd style
 ```
 
