@@ -1,3 +1,5 @@
+***Due to changed CSV columns, this implmentation is currently broken and will not work as intended.***
+
 # COVID-19-GeoPlot
 
 A tool to visualize daily case data published by the [ECDC](https://www.ecdc.europa.eu/en/copyright).
@@ -29,7 +31,7 @@ optional arguments:
   -x, --xkcd            xkcd style
 ```
 
-### Examples (updated daily)
+### Examples
 
 ![WORLD](https://gitlab.com/s9latimm/covid-19-geoplot/-/jobs/artifacts/master/raw/plots/covid-19-world-cases-example.svg?job=deploy&sanitize=true)
 
